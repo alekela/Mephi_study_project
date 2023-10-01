@@ -132,11 +132,8 @@ int main() {
     double signal_value;
     double phi = 3.14 / 2.;
     double period = 10;
-    const char csv_file_name[64] = "work1.csv";
-    double data[N_samples];
-    std::ofstream csv_file;
-    csv_file.open(csv_file_name);
-    csv_file << "time,signal\n";
+    const char csv_file_name[64] = "work2.csv";
+    complex<double> data[N_samples];
     // для случая двух случайных прямоугольников
     /*double t = 1.;
     double right_point = N - 2 * t;
@@ -145,12 +142,23 @@ int main() {
     right_point = N - t;
     left_point = first + t;
     double second = rand() / (double) RAND_MAX * (right_point - left_point);*/
-    for (size_t i = 0; i < N_samples; ++i){
+    for (size_t i = 0; i < N_samples; ++i) {
         signal_value = my_sin(i / F, 3, 0);
         signal_value = quantization(signal_value, 256);
         data[i] = signal_value;
     }
-    // FftDit(data, N_samples, );
+    FftDit(data, N_samples, (int) log2(N_samples), 1);
+
+    for (int i = 0; i < N_samples / 2; i++) {
+        swap(data[i], data[N_samples / 2 + i]);
+    }
+
+    std::ofstream csv_file;
+    csv_file.open(csv_file_name);
+    csv_file << "time,signal\n";
+    for (size_t i = 0; i < N_samples; i++) {
+        csv_file << (i / F) << "," << abs(data[i]) << "\n";
+    }
     csv_file.close();
     return 0;
 }
