@@ -46,10 +46,13 @@ int main() {
     left = 0;
     right = 1;
     int n;
-    cout << "Введите количество шагов:" << endl;
-    cin >> n;
-    cout << rect(n, left, right) << endl;
-    cout << trapezoid(n, left, right) << endl;
-    cout << simpson(n, left, right) << endl;
+    double true_value = 1.285398163397448;
+    int ns[7] = {10, 100, 1000, 10000, 100000, 1000000, 10000000};
+    for (int i = 0; i < 7; i++) {
+        int n = ns[i];
+        cout << abs(rect(n, left, right) - true_value) / true_value << endl;
+        cout << abs(trapezoid(n, left, right) - true_value) / true_value << endl;
+        cout << abs(simpson(n, left, right) - true_value) / true_value << endl;
+    }
 
 }
