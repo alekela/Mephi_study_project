@@ -81,6 +81,22 @@ void make_histogram2d(double** data, int len_data_x, int len_data_y, double* his
 }
 
 
+void Histogram4Gray8bpp(const unsigned char* pbImg, int iHeight, int iWidth, 
+                        int iWidthBytes, unsigned long* pulHist)
+{
+    // начальное обнуление массива гистограммы
+    memset(pulHist, 0, 256*sizeof(*pulHist));
+    // вычисление гистограммы
+    for (int y = 0; y < iHeight; ++y)
+    {
+        for (int x = 0; x < iWidth; ++x)
+        {
+            pulHist[ pbImg[iWidthBytes*y+x] ]++; 
+        }
+    }
+}
+
+
 double mean(double* hist_data, int len_hist_data, double left, double right) {
     double h = (right - left) / len_hist_data;
     double sum = 0;
