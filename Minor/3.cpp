@@ -4,9 +4,46 @@
 #include <cmath>
 #include <ctime>
 #include <random>
+#include "windows.h"
 
 
 using namespace std;
+
+
+void quantization(double* data, int len_data, int levels){
+    double right = INT64_MIN, left = INT64_MAX;
+    for (int i = 0; i < len_data; i++) {
+        if (data[i] > right) {
+            right = data[i];
+        }
+        if (data[i] < left) {
+            left = data[i];
+        }
+    }   
+
+    double quants[levels];
+    for (int i = 0; i < levels; i++) {
+        quants[i] = left + i * (right - left) / (levels - 1); 
+    }
+
+    double up, down;
+    for (int j = 0; j < len_data; j++) {
+        for (int i = 1; i < levels; i++){
+            if (data[j] <= quants[i]){
+                down = quants[i - 1];
+                up = quants[i];
+                break;
+            }
+        }
+        if (data[j] - down < up - data[j]) {
+            data[j] = down;
+        }
+        else {
+            data[j] = up;
+        }
+    }
+}
+
 
 double my_sin(double x, double period, double phi){
     return sin(x * 2 * 3.1415 / period + phi);
@@ -14,11 +51,11 @@ double my_sin(double x, double period, double phi){
 
 
 void add_impulse_noise(double P, double* data, int len_data) {
-    double check;
+    int check = 1. / P;
+
     double a = rand();
     for (int i = 0; i < len_data; i++) {
-        check = rand() / (double) RAND_MAX;
-        if (check < P) {
+        if (i % check == 0) {
             data[i] = a;
         }
     }
@@ -43,10 +80,15 @@ void make_histogram1d(double* data, int len_data, double* hist_data, int len_his
             left = data[i];
         }
     }
-    double h = (right - left) / len_hist_data;
+
+    double quants[len_hist_data];
+    for (int i = 0; i < len_hist_data; i++) {
+        quants[i] = left + i * (right - left) / (len_hist_data - 1); 
+    }
+
     for (int i = 0; i < len_data; i++) {
         for (int j = 0; j < len_hist_data; j++) {
-            if (data[i] < left + (j + 1) * h) {
+            if (data[i] == quants[j]) {
                 hist_data[j]++;
                 break;
             }
@@ -76,22 +118,6 @@ void make_histogram2d(double** data, int len_data_x, int len_data_y, double* his
                     break;
                 }
             }
-        }
-    }
-}
-
-
-void Histogram4Gray8bpp(const unsigned char* pbImg, int iHeight, int iWidth, 
-                        int iWidthBytes, unsigned long* pulHist)
-{
-    // начальное обнуление массива гистограммы
-    memset(pulHist, 0, 256*sizeof(*pulHist));
-    // вычисление гистограммы
-    for (int y = 0; y < iHeight; ++y)
-    {
-        for (int x = 0; x < iWidth; ++x)
-        {
-            pulHist[ pbImg[iWidthBytes*y+x] ]++; 
         }
     }
 }
@@ -152,7 +178,7 @@ int main() {
     for (int i = 0; i < 1000; i++) {
         data[i] = my_sin(i * h, 5, 0);
     }
-    add_Gauss_noise(1, data, 1000);
+    add_impulse_noise(0.1, data, 1000);
     const char csv_file_name[64] = "work3.csv";
     std::ofstream csv_file;
     csv_file.open(csv_file_name);
@@ -162,3 +188,4 @@ int main() {
     }
     csv_file.close();
 }
+
