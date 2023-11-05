@@ -34,8 +34,10 @@ long double centr_der(int i, long double *data, int data_size, long double h) {
 long double bisection(long double left, long double right, long double eps) {
     long double x = (right + left) / 2., prev_x = right;
     int n = log2((right - left) / eps) + 1; 
-    // у данного метода можно рассчитать количество итераций и реализовать его циклом for, без while и prev_x
-    for (int i = 0; i < n; i++){
+    /* у данного метода можно рассчитать количество итераций 
+    и реализовать его циклом for, без while и prev_x, получится точнее*/
+    while (abs(prev_x - x) > eps){
+        prev_x = x;
         if (f(x) * f(right) < 0)
             left = x;
         else
@@ -168,7 +170,7 @@ int main() {
             cout << "|x - previous_x| < eps = True, " << "|f(x)| < eps = ";
             if (abs(f(x)) < eps) cout << "True" << endl;
             else cout << "False" << endl;
-            cout << endl;
+            cout << "\n\n";
         }
     }
 }
