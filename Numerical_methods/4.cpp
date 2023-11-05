@@ -1,16 +1,25 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <iomanip>
 
 using namespace std;
 
 
-double func(double x) {
-    return sin(x);
+// функция, нули которой необходимо найти
+long double f(long double x) {
+    return exp(sin(x/2)) - atan(x) + 1;
 }
 
 
-double centr_der(int i, double *data, int data_size, double h) {
+// производная
+long double f_deriv(long double x) {
+    return exp(sin(x/2)) * cos(x/2) / 2 - 1/(pow(x,2) + 1);
+}
+
+
+// численное нахождение производной функции
+long double centr_der(int i, long double *data, int data_size, long double h) {
     if (i == 0) {
         return (4 * data[1] - data[2] - 3 * data[0]) / 2 / h;
     }
@@ -21,33 +30,74 @@ double centr_der(int i, double *data, int data_size, double h) {
 }
 
 
-double bisection(double left, double right, double eps) {
-    double x;
-    int n = log2((right - left) / eps) + 1;
-    for (int i = 0; i < n; i++) {
-        x = (right + left) / 2.;
-        if (func(x) * func(right) < 0) {
+// метод бисекции
+long double bisection(long double left, long double right, long double eps) {
+    long double x = (right + left) / 2., prev_x = right;
+    int n = log2((right - left) / eps) + 1; 
+    // у данного метода можно рассчитать количество итераций и реализовать его циклом for, без while и prev_x
+    for (int i = 0; i < n; i++){
+        if (f(x) * f(right) < 0)
             left = x;
-        }
-        else {
+        else
             right = x;
-        }
+        x = (right + left) / 2.;
+    }
+    return x;
+}
+
+
+// метод Ньютона
+long double newton_modif(long double f( long double x),
+                long double f0, 
+                long double x0, 
+                long double eps) 
+{
+    /*
+        f - левая часть решаемого уравнения
+        f0 - производная левой части в точке x0
+        x0 - начальное приближение
+        eps - точность решения
+    */
+
+    long double x1 = x0 - f(x0)/f0;
+    bool crit1 = abs(x1 - x0) > eps;        // флаг для отслеживания первого критерия останова
+    bool crit2 = abs(f(x1) - f(x0)) > eps;  // флаг для отслеживания второго критерия останова
+
+    while (crit1) {
+        x0 = x1;
+        x1 = x1 - f(x1)/f0;    // считаем новые приближенные значения корня
+        crit1 = abs(x1 - x0) > eps;    // проверяем выполнение критериев останова
+        crit2 = abs(f(x1) - f(x0)) > eps;
+    }
+    return x1;
+}
+
+
+// метод хорд
+long double chords(long double left, long double right, long double eps) {
+    long double x, prev_x = left;
+    x = -f(left) / (f(right) - f(left)) * (right - left);
+    while (abs(x - prev_x) > eps) {
+        prev_x = x;
+        if (f(x) * f(left) < 0) right = x;
+        else left = x;
+        x = -f(left) / (f(right) - f(left)) * (right - left);
     }
     return x;
 }
 
 
 int main() {
-    double left0 = 1, right0 = 8;
-    const int n0 = 8;
-    double h = (right0 - left0) / (n0 - 1);
+    long double left0 = 0, right0 = 10;
+    const int n0 = 10000;
+    long double h = (right0 - left0) / (n0 - 1);
 
-    double data[n0];
+    long double data[n0];
     for (int i = 0; i < n0; i++) {
-        data[i] = func(left0 + i * h);
+        data[i] = f(left0 + i * h);
     }
 
-    double der_data[n0];
+    long double der_data[n0];
     for (int i = 0; i < n0; i++) {
         der_data[i] = centr_der(i, data, n0, h);
     }
@@ -61,7 +111,7 @@ int main() {
         }
     }
     ends.push_back(n0 - 1);
-    vector <double> clear_starts, clear_ends;
+    vector <long double> clear_starts, clear_ends;
     for (int i = 0; i < starts.size(); i++) {
         if (data[starts[i]] * data[ends[i]] < 0) {
             clear_starts.push_back(left0 + starts[i] * h);
@@ -69,16 +119,56 @@ int main() {
         }
     }
 
-    double eps;
-    cout << "Введите точность:" << endl;
-    cin >> eps;
+    long double eps_s[3] = {1.0E-3, 1.0E-6, 1.0E-9};
+    long double eps;
+    for (int j = 0; j < 3; j++) {
+        eps = eps_s[j];
+        cout << "Для точности " << eps << ":" << endl;
 
-    for (int i = 0; i < clear_starts.size(); i++) {
-        double left = clear_starts[i];
-        double right = clear_ends[i];
+        cout << "Метод бисекции:" << endl;
+        for (int i = 0; i < clear_starts.size(); i++) {
+            long double left = clear_starts[i];
+            long double right = clear_ends[i];
+            long double x;
 
-        double x = bisection(left, right, eps);
-        cout << "Найденный корень из промежутка от " << clear_starts[i] << " до " << clear_ends[i] << " равен " << x << endl;
+            x = bisection(left, right, eps);
+            cout << "Корень номер " << i + 1 << ": " << setprecision(j * 3 + 4) << x << endl;
+            // |x - previous_x| < eps = True, так как является критерием останова для метода
+            cout << "|x - previous_x| < eps = True, " << "|f(x)| < eps = ";
+            if (abs(f(x)) < eps) cout << "True" << endl;
+            else cout << "False" << endl;
+            cout << endl;
+        }
+
+        cout << "Модифицированный метод Ньютона:" << endl;
+        for (int i = 0; i< clear_starts.size(); i++) {
+            long double left = clear_starts[i];
+            long double right = clear_ends[i];
+            long double x;
+            long double x0 = (right + left) / 2.;
+
+            x = newton_modif(f, f_deriv(x0), x0, eps);
+            cout << "Корень номер " << i + 1 << ": " << setprecision(j * 3 + 4) << x << endl;
+            // |x - previous_x| < eps = True, так как является критерием останова для метода
+            cout << "|x - previous_x| < eps = True, " << "|f(x)| < eps = ";
+            if (abs(f(x)) < eps) cout << "True" << endl;
+            else cout << "False" << endl;
+            cout << endl;
+        }
+
+        cout << "Метод хорд:" << endl;
+        for (int i = 0; i< clear_starts.size(); i++) {
+            long double left = clear_starts[i];
+            long double right = clear_ends[i];
+            long double x;
+
+            x = chords(left, right, eps);
+            cout << "Корень номер " << i + 1 << ": " << setprecision(j * 3 + 4) << x << endl;
+            // |x - previous_x| < eps = True, так как является критерием останова для метода
+            cout << "|x - previous_x| < eps = True, " << "|f(x)| < eps = ";
+            if (abs(f(x)) < eps) cout << "True" << endl;
+            else cout << "False" << endl;
+            cout << endl;
+        }
     }
-
 }
