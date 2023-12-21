@@ -34,7 +34,7 @@ def wave_solving_1(time_left, time_right, left, right, data, a, N,
     tau = (time_right - time_left) / (T - 1)
     for j in range(N):
         data[0][j] = phi[j]
-    data[1][j] = phi[j] + tau * psi[j]
+        data[1][j] = phi[j] + tau * psi[j]
 
     for i in range(2, T):
         for j in range(1, N - 1):
@@ -42,8 +42,8 @@ def wave_solving_1(time_left, time_right, left, right, data, a, N,
                          (data[i - 1][j + 1] - 2 * data[i - 1][j] + data[i - 1][j - 1]) - \
                          data[i - 2][j] + 2 * data[i - 1][j] + tau * tau * f[i][j]
 
-            data[i][0] = (gamma_0[i] * h - beta_0 * data[i][1]) / (alpha_0 * h - beta_0)
-            data[i][N - 1] = (gamma_l[i] * h + beta_l * data[i][N - 2]) / (alpha_l * h + beta_l)
+        data[i][0] = (gamma_0[i] * h - beta_0 * data[i][1]) / (alpha_0 * h - beta_0)
+        data[i][N - 1] = (gamma_l[i] * h + beta_l * data[i][N - 2]) / (alpha_l * h + beta_l)
 
 
 def wave_solving_2(time_left, time_right, left, right, data,
@@ -71,10 +71,10 @@ def wave_solving_2(time_left, time_right, left, right, data,
                          (data[i - 1][j + 1] - 2 * data[i - 1][j] + data[i - 1][j - 1]) - \
                          data[i - 2][j] + 2 * data[i - 1][j] + tau * tau * f[i][j]
 
-            data[i][0] = (gamma_0[i] - beta_0 * (4 * data[i][1] - data[i][2]) / 2. / h) / (
-                        alpha_0 - beta_0 * 3 / 2. / h)
-            data[i][N - 1] = (gamma_l[i] - beta_l * (data[i][N - 3] - 4 * data[i][N - 2]) / 2. / h) / (
-                        alpha_l + 3 * beta_l / 2. / h)
+        data[i][0] = (gamma_0[i] - beta_0 * (4 * data[i][1] - data[i][2]) / 2. / h) / (
+                    alpha_0 - beta_0 * 3 / 2. / h)
+        data[i][N - 1] = (gamma_l[i] - beta_l * (data[i][N - 3] - 4 * data[i][N - 2]) / 2. / h) / (
+                    alpha_l + 3 * beta_l / 2. / h)
 
 
 time_left = 0
@@ -117,23 +117,28 @@ x_grid, y_grid = np.meshgrid(x_grid, y_grid)
 
 wave_solving_2(time_left, time_right, left, right, function,
                a, N, T, phi, psi, f, gamma_0, gamma_l, alpha_0, beta_0, alpha_l, beta_l)
-for i in range(T):
-    print(function[i][1], end=" ")
-print()
+plt.figure(2)
+plt.plot(y_grid, [function[i][15] for i in range(T)])
+
+plt.figure(1)
 function = np.array(function)
 ax.plot_surface(x_grid, y_grid, function)
 
-
+function = [[0 for _ in range(N)] for _ in range(T)]
 wave_solving_1(time_left, time_right, left, right, function,
                a, N, T, phi, psi, f, gamma_0, gamma_l, alpha_0, beta_0, alpha_l, beta_l)
-for i in range(T):
-    print(function[i][1], end=" ")
-print()
-for i in range(T):
-    print(real_func(left + 1 * h, time_left + i * tau), end=" ")
+plt.figure(2)
+plt.plot(y_grid, [function[i][15] for i in range(T)])
+
+plt.figure(1)
 function = np.array(function)
 ax.plot_surface(x_grid, y_grid, function)
 
-ax.plot_surface(x_grid, y_grid, np.array([[real_func(left + j * h, time_left + i * tau) for j in range(N)] for i in range(T)]))
+plt.figure(2)
+plt.plot(y_grid, [real_func(left + 15 * h, time_left + i * tau) for i in range(T)])
+plt.legend(["Первый порядок точности", "Второй порядок точности", "Реальная функция"])
 
+plt.figure(1)
+ax.plot_surface(x_grid, y_grid,
+                np.array([[real_func(left + j * h, time_left + i * tau) for j in range(N)] for i in range(T)]))
 plt.show()

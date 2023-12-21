@@ -57,17 +57,15 @@ void wave_solving_2(double time_left, double time_right, double left, double rig
     for (int j = 0; j < N; j++) {
         data[0][j] = phi[j];
     }
+
     for (int j = 1; j < N - 1; j++) {
-        data[1][j] = 0.5 * (2. * tau * psi[j] + 2. * phi[j] + 
-        a * a * tau * tau / h / h * (data[0][j + 1] - 2 * phi[j] + data[0][j - 1]) + 
-        tau * tau * f[0][j]);
+        data[1][j] = ((a * a / h / h * (data[0][j + 1] - 2 * data[0][j] + data[0][j - 1]) + f[0][j]) * tau * tau + 
+        2 * data[0][j] + 2 * tau * psi[j]) / 2.;
     }
-    data[1][0] = 0.5 * (2. * tau * psi[0] + 2. * phi[0] + 
-        a * a * tau * tau / h / h * (2 * data[0][0] - 5 * data[0][1] + 4 * data[0][2] - data[0][3]) + 
-        tau * tau * f[0][0]);
-    data[1][N - 1] = 0.5 * (2. * tau * psi[N - 1] + 2. * phi[N - 1] - 
-        a * a * tau * tau / h / h * (2 * data[0][N - 1] - 5 * data[0][N - 2] + 4 * data[0][N - 3] - data[0][N - 4]) + 
-        tau * tau * f[0][N - 1]);
+    data[1][0] = ((a * a / h / h * (data[0][0] - 2 * data[0][1] + data[0][2]) + f[0][0]) * tau * tau + 
+        2 * data[0][0] + 2 * tau * psi[0]) / 2.;
+    data[1][N - 1] = ((a * a / h / h * (data[0][N - 1] - 2 * data[0][N - 2] + data[0][N - 3]) + f[0][N - 1]) * tau * tau + 
+        2 * data[0][N - 1] + 2 * tau * psi[N - 1]) / 2.;
 
     for (int i = 2; i < T; i++) {
         for (int j = 1; j < N - 1; j++) {
